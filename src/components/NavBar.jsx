@@ -7,7 +7,7 @@ function NavBar({onLogoClick, onProfileClick}) {
 
     return <nav className="navbar navbar-light bg-light">
         <div className="container-fluid">
-            <a className="navbar-brand" href="#" onClick={() => {
+            <a className="navbar-brand"   onClick={() => {
                 onLogoClick()
             }
             }>
