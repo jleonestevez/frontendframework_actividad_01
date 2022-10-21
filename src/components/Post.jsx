@@ -1,16 +1,16 @@
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments, faHeart} from "@fortawesome/free-solid-svg-icons";
 import { useState} from "react";
+import {setLike} from "../services/data-services";
 
-function Post({  image, createdAt, autor, text , comments }) {
-    const [likes, setLikes] =  useState(0);
-
+function Post({ id , like, image, createdAt, autor, text , comments }) {
+    const [likes, setLikes] =  useState(like);
     function likePost() {
-        setLikes(likes + 1);
+        setLike(id).then(setLikes(likes + 1));
     }
     return (
         <div className="card m-3" style={{width: "21rem"}}>
-            <img src={image} className="card-img-top" alt="..."/>
+            <img src={image} className="card-img-top" alt="Imagen No Disponible" />
             <div className="card-body">
                 <div className="d-flex justify-content-between">
                     <div>

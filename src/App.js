@@ -2,41 +2,64 @@ import './App.css';
 import NavBar from "./components/NavBar";
 import PostsList from "./components/PostsList";
 import SearchBar from "./components/SearchBar";
-import {useEffect, useState} from "react";
-import { getPosts, login} from "./services/data-services";
+import React, {useEffect, useState} from "react";
+import {getPosts, getProfile, login} from "./services/data-services";
 import Profile from "./components/Profile";
 import Login from "./components/Login";
 import Loader from "./components/Loader";
+import {Navigate, Route, Routes, useNavigate} from "react-router-dom";
 
-const initialState = [];
+const initialState = null;
+let initialLoginState = [];
 function App() {
+    const navigate = useNavigate();
+    initialLoginState = localStorage.getItem("hdApiToken") ? true : false;
+    console.log("initialLoginState" , initialLoginState);
     const [posts, setPosts] =  useState(initialState);
     const [postBack, setPostBack] =  useState(initialState);
-    const [section, setSection] =  useState("");
+    const [profile, setProfile] =  useState([]);
     const [search] =  useState("");
     const [error, setError] =  useState("");
-    const [loginOk, setloginOk] =  useState(false);
+    const [loginOk, setloginOk] =  useState(initialLoginState);
+    const [currentUser, setCurrentUser] =  useState({token:""});
     const [showLoader, setShowLoader] =  useState(false);
 
 
 
     useEffect(() => {
+        console.log("entro useEffect");
         const apiToken = localStorage.getItem("hdApiToken");
         if (apiToken) {
             setloginOk(true);
+            setCurrentUser({token: apiToken});
             setShowLoader(true);
             /**
              * Llamado para cargar posts
              */
-            getPosts(apiToken).then(response => {
+            getPosts().then(response => {
                 setPosts(response.data);
                 setPostBack(response.data);
-                setShowLoader(false);
-            }).catch(() => {
+                console.log("segundo llamado")
+                setShowLoader(true);
+                getProfile().then((res) => {
+                    setProfile(res.data);
+                    console.log("profile",profile.data);
+                    setShowLoader(false);
+                }).catch(() => {
+                    setShowLoader(false);
+                });
+            }).catch((e) => {
+
+                 if (e.response !== undefined && e.response.status === 401){
+                     localStorage.removeItem("hdApiToken");
+                     navigate("/login");
+                 }
                 setShowLoader(false);
             }) ;
+
         }
-    },[]);
+        console.log(loginOk);
+    },[loginOk]);
 
     /**
      * Funcion encargada de filtrar los posts y actualizandolos por medio del useState
@@ -45,16 +68,19 @@ function App() {
         const search = event.target.value;
         console.log(search);
         if(search === ""){
-            const apiToken = localStorage.getItem("hdApiToken");
             setShowLoader(true);
             /**
              * Llamado para cargar posts
              */
-            getPosts(apiToken).then(response => {
+            getPosts().then(response => {
                 setPosts(response.data);
                 setPostBack(response.data);
                 setShowLoader(false);
-            }).catch(() => {
+            }).catch((e) => {
+                if (e.response !== undefined &&  e.response.status === 401){
+                    localStorage.removeItem("hdApiToken");
+                    navigate("/login");
+                }
                 setShowLoader(false);
             }) ;
 
@@ -63,11 +89,12 @@ function App() {
     }
 
     function profileClick(){
-        setSection("profile");
+        console.log("profile");
+        navigate("/profile");
     }
 
     function logoClick(){
-        setSection("posts");
+        navigate("/");
     }
 
     function loginClick(email , password){
@@ -77,14 +104,17 @@ function App() {
             console.log(response);
             if (response.status === 200) {
                 localStorage.setItem('hdApiToken', response.data.token);
+                setCurrentUser({token:response.data.token });
                 setShowLoader(false);
                 setloginOk(true);
                 setShowLoader(true);
+                setError("go");
                 /**
                  * Llamado para cargar posts
                  */
-                getPosts(response.data.token).then(response => {
+                getPosts().then(response => {
                     setPosts(response.data);
+
                     setShowLoader(false);
                 }).catch(()=>{
                     setShowLoader(false);
@@ -102,17 +132,25 @@ function App() {
 
 
     return (
-        <div className="App">
-            <NavBar onLogoClick={logoClick} onProfileClick={profileClick}/>
-            { loginOk === false ?  <Login  error={error}   onLoginComplete={loginClick}/> : "" }
-            {section ==="profile"  && loginOk && posts !== initialState ? <Profile username="Jose" avatar="https://hbomax-images.warnermediacdn.com/2022-06/houseofthedragon_characterart_daemon_avatar_200x200.png?host=wme-hbomax-drupal-prod.s3.amazonaws.com" bio="Lorem insump" /> : ''}
-            {section !=="profile" && loginOk && posts !== initialState ?  <> <SearchBar  value={search} onSearch={onSearch}/>  <PostsList posts={posts}/> </>: ''}
-            <>
-                { showLoader ?  <><Loader loaderUrl="https://assets10.lottiefiles.com/private_files/lf30_jaijxnez.json"/> Cargando...  </>: ""}
-            </>
+        <>
+        <NavBar onLogoClick={logoClick} onProfileClick={profileClick}/>
 
-        </div>
-    );
+
+        <Routes>
+            <Route path='/login' element= <Login error={error} onLoginComplete={loginClick}/>     />
+            <Route path='/' element={
+                <>
+                 { loginOk === false  ? <Navigate to="/login" replace={false} /> : "" }
+                <SearchBar  value={search} onSearch={onSearch}/>
+                <PostsList posts={posts}/>
+                { showLoader ?  <><Loader loaderUrl="https://assets10.lottiefiles.com/private_files/lf30_jaijxnez.json"/> Cargando...  </>: ""}
+            </>}    />
+            <Route path='/profile' element=
+                <Profile username= {profile.username}
+                   avatar={profile.avatar}
+                   bio={profile.bio}/>    />
+            </Routes>
+        </>);
 }
 
 export default App;

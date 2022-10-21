@@ -1,15 +1,19 @@
 import React from 'react';
+import {Navigate} from "react-router-dom";
 
 
 function Login({error , onLoginComplete}) {
     return  (<div className="d-flex flex-column m-4 text-start">
-        { error !== '' ?   <div className="d-flex flex-column" style={{background: '#F6CBD0',
+        { error !== '' && error !== 'go' ?   <div className="d-flex flex-column" style={{background: '#F6CBD0',
             color:"#A55E64",
             borderRadius:"5px",
             padding:"9px",
             marginBottom:"15px"}}>
             <span>{error}</span>
         </div> : ""}
+        { error === 'go' ?
+            <Navigate to="/" replace={true} /> :""}
+
         <div className="form-group" style={{marginBottom:"10px"}}>
             <label htmlFor="exampleInputEmail1" style={{marginBottom:"10px"}}>Email address</label>
             <input id="email" type="email" className="form-control"   aria-describedby="emailHelp"

@@ -8,14 +8,14 @@ function getMinutesBetweenDates(startDate, endDate) {
 }
 function PostsList({posts}) {
     console.log(posts)
-    const episodesComponents = posts.map((post) => {
+    const episodesComponents = posts ? posts.map((post) => {
         return (
-            <Post key={post.id} image={post.image} autor={post.author.name} text={post.text}  createdAt={getMinutesBetweenDates(new Date(post.createdAt), new Date())}/>)
+            <Post key={post.id} id={post.id} like={ post.likes} image={post.image} autor={post.author.name} text={post.text}  createdAt={getMinutesBetweenDates(new Date(post.createdAt), new Date())}/>)
     }
-    )
+    ) : ""
     return (
         <div className="d-flex flex-rows flex-wrap justify-content-center">
-            {episodesComponents.length === 0 ? <Loader loaderUrl="https://assets2.lottiefiles.com/packages/lf20_jippjent.json"/> : episodesComponents}
+            {posts !== null && episodesComponents.length === 0 ? <Loader loaderUrl="https://assets2.lottiefiles.com/packages/lf20_jippjent.json"/> : episodesComponents}
         </div>
     )
 }
